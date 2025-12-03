@@ -26,22 +26,9 @@ int lastDahState = HIGH;
 // Setup modifier state (enables press/release entangled keyboard modifier states)
 unsigned int modifierState = 0;
 
-// Setup toggle states
-typedef struct {
-  int toggle; // Will be 0 or 1
-  int states[2]; // Will map to desired keypress
-} ModeToggle;
-
-ModeToggle ditm = {
-  .toggle = 0,
-  .states = { 0, MOD_CONTROL_LEFT } // State index 0 is redundant, however we keep it in case of needing a null send
-};
-
-ModeToggle dahm = {
-  .toggle = 0,
-  .states = { 0, MOD_CONTROL_RIGHT } // State index 0 is redundant, however we keep it in case of needing a null send
-};
-
+// Setup modifier types
+unsigned int ditMOD = MOD_CONTROL_LEFT;
+unsigned int dahMOD = MOD_CONTROL_RIGHT;
 
 void setup() {
   // Initialize the digital LED pin as an output
@@ -54,7 +41,7 @@ void setup() {
 
 
 // Function for sending keypress
-unsigned long sendKey(int pin, unsigned long lastTime, int *lastState, ModeToggle *m, unsigned int *modState) {
+unsigned long sendKey(int pin, unsigned long lastTime, int *lastState, unsigned int modtype, unsigned int *modState) {
   unsigned long nowTime = millis();
   
   int curState = digitalRead(pin);
@@ -66,16 +53,13 @@ unsigned long sendKey(int pin, unsigned long lastTime, int *lastState, ModeToggl
 
     // Applies/Removes modifier states with bitwise operations (allows press/release after alternating sequence without releasing all keypresses)
     if (!curState) {
-      *modState |= m->states[1];
+      *modState |= modtype;
     } else {
-      *modState &= ~m->states[1];
+      *modState &= ~modtype;
     }
 
     // Send Keypress to HID input
     DigiKeyboard.sendKeyPress(0, *modState);
-
-    // Toggle mode
-    m->toggle = !m->toggle;
   }
   
   return lastTime;
@@ -84,8 +68,8 @@ unsigned long sendKey(int pin, unsigned long lastTime, int *lastState, ModeToggl
 
 // main loop polling pin states
 void loop() {
-  timeDit = sendKey(DIT_PIN, timeDit, &lastDitState, &ditm, &modifierState);
-  timeDah = sendKey(DAH_PIN, timeDah, &lastDahState, &dahm, &modifierState);
+  timeDit = sendKey(DIT_PIN, timeDit, &lastDitState, ditMOD, &modifierState);
+  timeDah = sendKey(DAH_PIN, timeDah, &lastDahState, dahMOD, &modifierState);
 
   // LED logic
   if (!digitalRead(DIT_PIN) || !digitalRead(DAH_PIN)) {
