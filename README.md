@@ -10,8 +10,19 @@ To build and install on your microcontroller, please use the Arduino IDE with th
 Additionally, this software can be flashed to any other arduino board, microcontroller, etc.
 Simply use the approapriate HID Keyboard library (ex. Arduino's Keyboard library rather than DigiStump's)
 
+### Hardware Instructions
+1. Solder/Connect Dit paddle to PIN0 and Dah paddle to PIN2
+2. Connect Ground wires to GND PIN
+3. If modifying for another device, ensure you make the appropriate changes to pin configuration in iambic_controller.ino
+4. Use a LED to test if PULLUP (Dit/Dah press/release) is working correctly.
+
 ### Compatibility
 Plug and play with VBand, MorseIT (IOS/Android), MorseKeyer Software (PC)
+
+
+
+![IMG_8415](https://github.com/user-attachments/assets/8373d34d-42c8-48fa-b347-3db874731b60)
+
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
