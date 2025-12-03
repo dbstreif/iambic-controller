@@ -1,22 +1,47 @@
-#include <DigiCDC.h>
+#include <DigiKeyboard.h>
+
+/* 
+This firmware program is compatible with VBand CW Iambic Paddle Modes (Should work for many other other programs as well)
+Modified for ATtiny85 microcontroller
+Website URL (for inspiration, but found that it was bad logic): http://oz1jhm.dk/content/hamradio-solutions-vband-interface
+Author: Dominic Streif [https://github.com/dbstreif]
+*/
 
 // PINS
 const int DIT_PIN = 0;
 const int DAH_PIN = 2;
 const int LED = 1;
 
-// Paddle Debounce
-const unsigned long DEBOUNCE_MS = 5;
+// Debounce time
+const unsigned long DEBOUNCE = 8;
 
-// Vars
-unsigned long now = 0;
-unsigned long lastDitChange = 0;
-unsigned long lastDahChange = 0;
-bool currentDit = 1, currentDah = 1;
-bool lastDit = 1, lastDah = 1;
+// Setup time parameters
+unsigned long timeDit = 0;
+unsigned long timeDah = 0;
 
-int ditState = 0;
-int dahState = 0;
+// Setup prevState parameters
+int lastDitState = HIGH;
+int lastDahState = HIGH;
+
+// Setup modifier state (enables press/release entangled keyboard modifier states)
+unsigned int modifierState = 0;
+
+// Setup toggle states
+typedef struct {
+  int toggle; // Will be 0 or 1
+  int states[2]; // Will map to desired keypress
+} ModeToggle;
+
+ModeToggle ditm = {
+  .toggle = 0,
+  .states = { 0, MOD_CONTROL_LEFT } // State index 0 is redundant, however we keep it in case of needing a null send
+};
+
+ModeToggle dahm = {
+  .toggle = 0,
+  .states = { 0, MOD_CONTROL_RIGHT } // State index 0 is redundant, however we keep it in case of needing a null send
+};
+
 
 void setup() {
   // Initialize the digital LED pin as an output
@@ -25,70 +50,49 @@ void setup() {
   // Initialize the DIT and DAH pin mode
   pinMode(DIT_PIN, INPUT_PULLUP);
   pinMode(DAH_PIN, INPUT_PULLUP);
-
-  // Initialize the Serializer
-  SerialUSB.begin();
-  // 5 Second Start Delay to let VSerial reader attach
-  SerialUSB.delay(2000);
-  SerialUSB.refresh();
-  SerialUSB.println(F("Firmware fully booted!"));
 }
 
-// Debounce
-void loop() {
-  now = millis();
 
-  // ---- DIT ----
-  currentDit = digitalRead(DIT_PIN);
-  if (currentDit != lastDit && (now - lastDitChange >= DEBOUNCE_MS)) {
-    lastDitChange = now;
-    lastDit = currentDit;
-    ditState = !ditState;
-    SerialUSB.print(ditState);
-    SerialUSB.println(dahState);
+// Function for sending keypress
+unsigned long sendKey(int pin, unsigned long lastTime, int *lastState, ModeToggle *m, unsigned int *modState) {
+  unsigned long nowTime = millis();
+  
+  int curState = digitalRead(pin);
+
+  if ((nowTime - lastTime >= DEBOUNCE) && (curState != *lastState)) {
+    // Race condition requirement: Set state and time immediately after debounce check
+    *lastState = curState;
+    lastTime = nowTime;
+
+    // Applies/Removes modifier states with bitwise operations (allows press/release after alternating sequence without releasing all keypresses)
+    if (!curState) {
+      *modState |= m->states[1];
+    } else {
+      *modState &= ~m->states[1];
+    }
+
+    // Send Keypress to HID input
+    DigiKeyboard.sendKeyPress(0, *modState);
+
+    // Toggle mode
+    m->toggle = !m->toggle;
   }
-
-  // ---- DAH ----
-  currentDah = digitalRead(DAH_PIN);
-  if (currentDah != lastDah && (now - lastDahChange >= DEBOUNCE_MS)) {
-    lastDahChange = now;
-    lastDah = currentDah;
-    dahState = !dahState;
-    SerialUSB.print(ditState);
-    SerialUSB.println(dahState);
-  }
-
-
-  // LED indicates any paddle pressed
-  digitalWrite(LED, ditState || dahState);
-
-  SerialUSB.task(); // keeps USB alive
+  
+  return lastTime;
 }
 
-/*
-// Paddle hold
-void loop() {
-  bool dit = digitalRead(DIT_PIN) == LOW;
-  bool dah = digitalRead(DAH_PIN) == LOW;
 
-  // send while held
-  if (dit && dah) {
-    SerialUSB.println("DIT DAH");
+// main loop polling pin states
+void loop() {
+  timeDit = sendKey(DIT_PIN, timeDit, &lastDitState, &ditm, &modifierState);
+  timeDah = sendKey(DAH_PIN, timeDah, &lastDahState, &dahm, &modifierState);
+
+  // LED logic
+  if (!digitalRead(DIT_PIN) || !digitalRead(DAH_PIN)) {
     digitalWrite(LED, HIGH);
-    SerialUSB.delay((1200 / WPM) + ((1200 / WPM) * 3));
-  } else if (dit) {
-    SerialUSB.println("DIT");
-    digitalWrite(LED, HIGH);
-    SerialUSB.delay(1200 / WPM);
-  } else if (dah) {
-    SerialUSB.println("DAH");
-    digitalWrite(LED, HIGH);
-    SerialUSB.delay((1200 / WPM) * 3);
   } else {
     digitalWrite(LED, LOW);
-    SerialUSB.delay(5);
   }
 
-  SerialUSB.task();      // keep USB alive
+  DigiKeyboard.delay(1);
 }
-*/
