@@ -1,0 +1,22 @@
+# Iambic Controller DigiStump ATtiny85 USB Microcontroller Firmware
+### (Morse Code Keyer Software)
+
+A lightweight firmware for the DigiStump ATtiny85 that implements an iambic CW keyer controller over USB. 
+This project provides paddle input handling, configurable keyer logic, and USB HID support.
+
+To build and install on your microcontroller, please use the Arduino IDE with the Digistump additional boards manager:
+[text link](https://raw.githubusercontent.com/digistump/arduino-boards-index/master/package_digistump_index.json)
+
+Additionally, this software can be flashed to any other arduino board, microcontroller, etc.
+Simply use the approapriate HID Keyboard library (ex. Arduino's Keyboard library rather than DigiStump's)
+
+Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
+
+This work is licensed under a
+[Creative Commons Attribution 4.0 International License][cc-by].
+
+[![CC BY 4.0][cc-by-image]][cc-by]
+
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
