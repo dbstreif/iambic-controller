@@ -10,6 +10,9 @@ To build and install on your microcontroller, please use the Arduino IDE with th
 Additionally, this software can be flashed to any other arduino board, microcontroller, etc.
 Simply use the approapriate HID Keyboard library (ex. Arduino's Keyboard library rather than DigiStump's)
 
+### Compatibility
+Plug and play with VBand, MorseIT (IOS/Android), MorseKeyer Software (PC)
+
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
 This work is licensed under a
