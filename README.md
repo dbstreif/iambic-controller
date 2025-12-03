@@ -17,7 +17,7 @@ Simply use the approapriate HID Keyboard library (ex. Arduino's Keyboard library
 4. Use a LED to test if PULLUP (Dit/Dah press/release) is working correctly.
 
 ### Compatibility
-Plug and play with VBand, MorseIT (IOS/Android), MorseKeyer Software (PC)
+Plug and play with VBand, MorseIT (IOS/Android), MorseKeyer Software (PC), and many other applications.
 
 
 
